@@ -4,7 +4,7 @@
 [![AWS](https://img.shields.io/badge/AWS-Free_Tier-FF9900?logo=amazon-aws)](https://aws.amazon.com/)
 [![Multi-Environment](https://img.shields.io/badge/Environments-Dev%20%7C%20Stage%20%7C%20Prod-blue)](https://terraform.io/)
 [![Infrastructure as Code](https://img.shields.io/badge/IaC-Terraform-purple)](https://www.terraform.io/)
-[![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+[![DevOps](https://img.shields.io/badge/DevOps-Automation-orange)](https://terraform.io/)
 
 **Production-ready Terraform Multi-Environment AWS Infrastructure** | Enterprise-grade Infrastructure as Code (IaC) project for automated multi-environment cloud provisioning (Dev/Stage/Prod), CI/CD pipelines, comprehensive monitoring, and DevOps best practices—100% AWS Free Tier compatible.
 
@@ -2317,28 +2317,6 @@ Want to contribute? Consider adding:
 - **aws-vault:** Securely store and access AWS credentials
 - **aws-cli:** Command-line interface for AWS
 - **AWS CloudShell:** Browser-based shell in AWS Console
-
-## 📜 License
-
-This project is licensed under the MIT License - see below for details:
-
-```
-MIT License
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
-```
 
 ## 🤝 Contributing
 

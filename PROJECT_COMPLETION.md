@@ -30,8 +30,7 @@ terraform-multi-environment-aws-infrastructure/
 ├── 📄 QUICKSTART.md              # 10-minute setup guide
 ├── 📄 PROJECT_SUMMARY.md         # Statistics and metrics
 ├── 📄 STRUCTURE.md               # Project structure details
-├── 📄 .gitignore                 # Git ignore rules
-└── 📄 LICENSE                    # MIT License
+└── 📄 .gitignore                 # Git ignore rules
 ```
 
 ---
@@ -61,7 +60,6 @@ terraform-multi-environment-aws-infrastructure/
 
 **Configuration:**
 - ✅ .gitignore
-- ✅ LICENSE
 
 ### Lines of Code: **5,200+ lines**
 - Terraform: ~2,200 lines

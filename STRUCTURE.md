@@ -81,8 +81,7 @@ terraform-multi-environment-aws-infrastructure/
 ├── README.md                            # Comprehensive documentation (3000+ words)
 ├── QUICKSTART.md                        # 10-minute quick start guide
 ├── PROJECT_SUMMARY.md                   # Project statistics and metrics
-├── STRUCTURE.md                         # This file - project structure
-└── LICENSE                              # MIT License
+└── STRUCTURE.md                         # This file - project structure
 
 ```
 
@@ -95,9 +94,9 @@ terraform-multi-environment-aws-infrastructure/
 - **CI/CD Files:** 1
 - **Backend Files:** 1
 - **Documentation Files:** 5
-- **Configuration Files:** 2 (.gitignore, LICENSE)
+- **Configuration Files:** 1 (.gitignore)
 
-**Total Files:** 50+
+**Total Files:** 49+
 
 ### By Type
 - **Terraform (.tf):** 25 files
@@ -106,7 +105,7 @@ terraform-multi-environment-aws-infrastructure/
 - **Backend Config (.hcl):** 3 files
 - **GitHub Actions (.yml):** 1 file
 - **Documentation (.md):** 5 files
-- **Other:** 2 files
+- **Other:** 1 file (.gitignore)
 
 ## Lines of Code (Approximate)
 
@@ -172,7 +171,6 @@ terraform-multi-environment-aws-infrastructure/
 | `QUICKSTART.md` | Fast setup guide |
 | `PROJECT_SUMMARY.md` | Project statistics |
 | `STRUCTURE.md` | This file |
-| `LICENSE` | MIT License |
 
 ## Module Dependencies
 
