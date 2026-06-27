@@ -1,10 +1,10 @@
 # Terraform Backend Configuration
-# This file creates the S3 bucket and DynamoDB table for storing Terraform state
-# Must be applied first before deploying any environment
+# This file creates the S3 bucket for storing Terraform state
+# S3 now provides native state locking with versioning enabled
 
 terraform {
   required_version = ">= 1.9.0"
-  
+
   required_providers {
     aws = {
       source  = "hashicorp/aws"
@@ -35,7 +35,7 @@ resource "aws_s3_bucket" "terraform_state" {
   }
 }
 
-# Enable versioning for state file history
+# Enable versioning for state file history and locking
 resource "aws_s3_bucket_versioning" "terraform_state" {
   bucket = aws_s3_bucket.terraform_state.id
 
@@ -65,23 +65,6 @@ resource "aws_s3_bucket_public_access_block" "terraform_state" {
   restrict_public_buckets = true
 }
 
-# DynamoDB table for state locking
-resource "aws_dynamodb_table" "terraform_locks" {
-  name         = var.dynamodb_table_name
-  billing_mode = "PAY_PER_REQUEST"
-  hash_key     = "LockID"
-
-  attribute {
-    name = "LockID"
-    type = "S"
-  }
-
-  tags = {
-    Name        = "Terraform State Lock Table"
-    Description = "DynamoDB table for Terraform state locking"
-  }
-}
-
 # Variables
 variable "aws_region" {
   description = "AWS region for backend resources"
@@ -92,12 +75,6 @@ variable "aws_region" {
 variable "backend_bucket_name" {
   description = "Name of the S3 bucket for Terraform state"
   type        = string
-}
-
-variable "dynamodb_table_name" {
-  description = "Name of the DynamoDB table for state locking"
-  type        = string
-  default     = "terraform-state-locks"
 }
 
 # Outputs
@@ -111,12 +88,12 @@ output "s3_bucket_arn" {
   value       = aws_s3_bucket.terraform_state.arn
 }
 
-output "dynamodb_table_name" {
-  description = "Name of the DynamoDB table for state locking"
-  value       = aws_dynamodb_table.terraform_locks.name
-}
-
-output "dynamodb_table_arn" {
-  description = "ARN of the DynamoDB table"
-  value       = aws_dynamodb_table.terraform_locks.arn
+output "backend_config_info" {
+  description = "Backend configuration information"
+  value = {
+    bucket  = aws_s3_bucket.terraform_state.id
+    region  = var.aws_region
+    encrypt = true
+    note    = "S3 versioning provides native state locking - DynamoDB not required"
+  }
 }

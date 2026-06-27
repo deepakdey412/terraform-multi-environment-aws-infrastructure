@@ -1,8 +1,8 @@
 # Production Environment - Backend Configuration
 # Use this file with: terraform init -backend-config=backend.hcl
+# S3 versioning provides native state locking - DynamoDB not required
 
-bucket         = "YOUR-BACKEND-BUCKET-NAME"  # Replace with your backend bucket name
-key            = "prod/terraform.tfstate"
-region         = "us-east-1"
-dynamodb_table = "terraform-state-locks"
-encrypt        = true
+bucket  = "terraform-state-940507691983"
+key     = "prod/terraform.tfstate"
+region  = "us-east-1"
+encrypt = true

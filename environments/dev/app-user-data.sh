@@ -1,15 +1,18 @@
 #!/bin/bash
-# User Data Script for EC2 Instance - Dev Environment
-# This script runs on instance startup
+# Application Instance User Data Script - Dev Environment
+# Runs on Ubuntu 22.04 instances in Private Subnet (Auto Scaling Group)
 
 set -e
 
 # Update system packages
-yum update -y
+apt-get update
+apt-get upgrade -y
 
 # Install essential packages
-yum install -y \
-    aws-cli \
+apt-get install -y \
+    awscli \
+    python3 \
+    python3-pip \
     git \
     htop \
     wget \
@@ -25,14 +28,19 @@ cat <<EOF > /opt/aws/amazon-cloudwatch-agent/etc/cloudwatch-config.json
       "files": {
         "collect_list": [
           {
-            "file_path": "/var/log/messages",
+            "file_path": "/var/log/syslog",
             "log_group_name": "${log_group_name}",
-            "log_stream_name": "{instance_id}/messages"
+            "log_stream_name": "{instance_id}/syslog"
           },
           {
-            "file_path": "/var/log/secure",
+            "file_path": "/var/log/auth.log",
             "log_group_name": "${log_group_name}",
-            "log_stream_name": "{instance_id}/secure"
+            "log_stream_name": "{instance_id}/auth"
+          },
+          {
+            "file_path": "/var/log/webapp.log",
+            "log_group_name": "${log_group_name}",
+            "log_stream_name": "{instance_id}/webapp"
           }
         ]
       }
@@ -85,7 +93,7 @@ cat <<'WEBAPP' > /opt/app/index.html
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Multi-Env Infrastructure - Dev</title>
+    <title>Multi-Env Infrastructure - Dev (Private Subnet)</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -102,6 +110,7 @@ cat <<'WEBAPP' > /opt/app/index.html
             border-radius: 10px;
             box-shadow: 0 10px 40px rgba(0,0,0,0.3);
             text-align: center;
+            max-width: 600px;
         }
         h1 {
             color: #333;
@@ -114,8 +123,32 @@ cat <<'WEBAPP' > /opt/app/index.html
             border-radius: 20px;
             font-size: 14px;
         }
+        .subnet-badge {
+            background: #28a745;
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 12px;
+            margin-left: 10px;
+        }
+        .ubuntu-badge {
+            background: #E95420;
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 12px;
+            margin-left: 10px;
+        }
         .info {
             margin-top: 20px;
+            text-align: left;
+        }
+        .architecture {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 20px;
+            font-size: 12px;
             text-align: left;
         }
     </style>
@@ -123,27 +156,46 @@ cat <<'WEBAPP' > /opt/app/index.html
 <body>
     <div class="container">
         <h1>🚀 Multi-Environment Infrastructure</h1>
-        <span class="badge">Development Environment</span>
+        <span class="badge">Development</span>
+        <span class="subnet-badge">Private Subnet</span>
+        <span class="ubuntu-badge">Ubuntu 22.04</span>
         <div class="info">
             <p><strong>Environment:</strong> ${environment}</p>
             <p><strong>S3 Bucket:</strong> ${s3_bucket_name}</p>
             <p><strong>Instance ID:</strong> <span id="instance-id">Loading...</span></p>
-            <p><strong>Region:</strong> <span id="region">Loading...</span></p>
+            <p><strong>Private IP:</strong> <span id="private-ip">Loading...</span></p>
+            <p><strong>Availability Zone:</strong> <span id="az">Loading...</span></p>
+        </div>
+        <div class="architecture">
+            <strong>Architecture:</strong><br>
+            Internet → ALB (Public Subnet) → This Instance (Private Subnet)<br>
+            Outbound: This Instance → NAT Gateway → Internet<br>
+            SSH Access: Bastion Host (Public) → This Instance (Private)
         </div>
     </div>
     <script>
-        fetch('http://169.254.169.254/latest/meta-data/instance-id')
+        const metadataBase = 'http://169.254.169.254/latest/meta-data/';
+        
+        fetch(metadataBase + 'instance-id')
             .then(r => r.text())
-            .then(id => document.getElementById('instance-id').textContent = id);
-        fetch('http://169.254.169.254/latest/meta-data/placement/region')
+            .then(id => document.getElementById('instance-id').textContent = id)
+            .catch(() => document.getElementById('instance-id').textContent = 'N/A');
+            
+        fetch(metadataBase + 'local-ipv4')
             .then(r => r.text())
-            .then(region => document.getElementById('region').textContent = region);
+            .then(ip => document.getElementById('private-ip').textContent = ip)
+            .catch(() => document.getElementById('private-ip').textContent = 'N/A');
+            
+        fetch(metadataBase + 'placement/availability-zone')
+            .then(r => r.text())
+            .then(az => document.getElementById('az').textContent = az)
+            .catch(() => document.getElementById('az').textContent = 'N/A');
     </script>
 </body>
 </html>
 WEBAPP
 
-# Install and configure simple web server (Python)
+# Create and start web server service
 cat <<'SERVICE' > /etc/systemd/system/webapp.service
 [Unit]
 Description=Simple Web Application
@@ -155,6 +207,8 @@ User=root
 WorkingDirectory=/opt/app
 ExecStart=/usr/bin/python3 -m http.server 80
 Restart=always
+StandardOutput=append:/var/log/webapp.log
+StandardError=append:/var/log/webapp.log
 
 [Install]
 WantedBy=multi-user.target
@@ -166,8 +220,8 @@ systemctl enable webapp
 systemctl start webapp
 
 # Create a test file in S3
-echo "Instance initialized at $(date)" > /tmp/init-log.txt
-aws s3 cp /tmp/init-log.txt s3://${s3_bucket_name}/logs/$(hostname)-init.txt
+echo "App instance initialized at $(date) on Ubuntu 22.04 in Private Subnet" > /tmp/init-log.txt
+aws s3 cp /tmp/init-log.txt s3://${s3_bucket_name}/logs/$(hostname)-init.txt || true
 
 # Log completion
-echo "User data script completed successfully at $(date)" >> /var/log/user-data.log
+echo "Application instance initialization completed at $(date)" >> /var/log/user-data.log

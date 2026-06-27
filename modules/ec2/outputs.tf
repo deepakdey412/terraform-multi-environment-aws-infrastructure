@@ -1,41 +1,32 @@
 # EC2 Module - Outputs
+# Outputs for Bastion Host
 
-output "instance_ids" {
-  description = "List of EC2 instance IDs"
-  value       = aws_instance.main[*].id
+output "bastion_instance_id" {
+  description = "ID of the Bastion Host"
+  value       = var.create_bastion ? aws_instance.bastion[0].id : null
 }
 
-output "instance_arns" {
-  description = "List of EC2 instance ARNs"
-  value       = aws_instance.main[*].arn
+output "bastion_instance_arn" {
+  description = "ARN of the Bastion Host"
+  value       = var.create_bastion ? aws_instance.bastion[0].arn : null
 }
 
-output "instance_public_ips" {
-  description = "List of public IP addresses"
-  value       = aws_instance.main[*].public_ip
+output "bastion_public_ip" {
+  description = "Public IP address of Bastion Host"
+  value       = var.create_bastion ? aws_instance.bastion[0].public_ip : null
 }
 
-output "instance_private_ips" {
-  description = "List of private IP addresses"
-  value       = aws_instance.main[*].private_ip
+output "bastion_private_ip" {
+  description = "Private IP address of Bastion Host"
+  value       = var.create_bastion ? aws_instance.bastion[0].private_ip : null
 }
 
-output "instance_public_dns" {
-  description = "List of public DNS names"
-  value       = aws_instance.main[*].public_dns
-}
-
-output "instance_private_dns" {
-  description = "List of private DNS names"
-  value       = aws_instance.main[*].private_dns
-}
-
-output "elastic_ips" {
-  description = "List of Elastic IP addresses"
-  value       = aws_eip.main[*].public_ip
+output "bastion_public_dns" {
+  description = "Public DNS name of Bastion Host"
+  value       = var.create_bastion ? aws_instance.bastion[0].public_dns : null
 }
 
 output "ami_id" {
-  description = "AMI ID used for instances"
-  value       = data.aws_ami.amazon_linux.id
+  description = "AMI ID used for Bastion Host"
+  value       = data.aws_ami.ubuntu.id
 }

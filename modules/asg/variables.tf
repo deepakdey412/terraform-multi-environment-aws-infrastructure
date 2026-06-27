@@ -1,5 +1,4 @@
-# EC2 Module - Variables
-# Variables for Bastion Host
+# Auto Scaling Group Module - Variables
 
 variable "project_name" {
   description = "Name of the project"
@@ -11,12 +10,6 @@ variable "environment" {
   type        = string
 }
 
-variable "create_bastion" {
-  description = "Create Bastion Host"
-  type        = bool
-  default     = true
-}
-
 variable "instance_type" {
   description = "EC2 instance type"
   type        = string
@@ -24,7 +17,7 @@ variable "instance_type" {
 }
 
 variable "subnet_ids" {
-  description = "List of subnet IDs (public subnets for bastion)"
+  description = "List of subnet IDs for Auto Scaling Group"
   type        = list(string)
 }
 
@@ -36,7 +29,6 @@ variable "security_group_ids" {
 variable "iam_instance_profile" {
   description = "IAM instance profile name"
   type        = string
-  default     = ""
 }
 
 variable "user_data_script" {
@@ -61,6 +53,42 @@ variable "root_volume_size" {
   description = "Size of root volume in GB"
   type        = number
   default     = 8
+}
+
+variable "min_size" {
+  description = "Minimum number of instances in ASG"
+  type        = number
+  default     = 1
+}
+
+variable "max_size" {
+  description = "Maximum number of instances in ASG"
+  type        = number
+  default     = 2
+}
+
+variable "desired_capacity" {
+  description = "Desired number of instances in ASG"
+  type        = number
+  default     = 1
+}
+
+variable "target_group_arns" {
+  description = "List of target group ARNs for ALB"
+  type        = list(string)
+  default     = []
+}
+
+variable "enable_scaling_policy" {
+  description = "Enable auto scaling policy"
+  type        = bool
+  default     = true
+}
+
+variable "target_cpu_utilization" {
+  description = "Target CPU utilization for scaling"
+  type        = number
+  default     = 70
 }
 
 variable "key_name" {

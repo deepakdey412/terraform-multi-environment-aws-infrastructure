@@ -10,7 +10,7 @@ terraform-multi-environment-aws-infrastructure/
 │       └── terraform.yml                 # GitHub Actions CI/CD pipeline
 │
 ├── 📁 backend/
-│   └── backend.tf                        # S3 + DynamoDB backend configuration
+│   └── backend.tf                        # S3 backend configuration
 │
 ├── 📁 modules/                           # Reusable Terraform modules
 │   │

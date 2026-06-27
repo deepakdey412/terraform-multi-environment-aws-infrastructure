@@ -14,37 +14,27 @@ resource "aws_cloudwatch_log_group" "main" {
   )
 }
 
-# CloudWatch Dashboard
+# CloudWatch Dashboard - Only create if instance_ids is not empty or if we have ASG
 resource "aws_cloudwatch_dashboard" "main" {
+  count = length(var.instance_ids) > 0 || var.autoscaling_group_name != "" ? 1 : 0
+
   dashboard_name = "${var.project_name}-${var.environment}-dashboard"
 
-  dashboard_body = jsonencode({
+  dashboard_body = var.autoscaling_group_name != "" ? jsonencode({
     widgets = [
       {
         type = "metric"
         properties = {
           metrics = [
-            for instance_id in var.instance_ids : [
-              "AWS/EC2",
-              "CPUUtilization",
-              {
-                stat   = "Average"
-                label  = "Instance ${instance_id}"
-                region = var.aws_region
-              },
-              { dimensions = { InstanceId = instance_id } }
-            ]
+            ["AWS/AutoScaling", "GroupDesiredCapacity", "AutoScalingGroupName", var.autoscaling_group_name],
+            [".", "GroupInServiceInstances", ".", "."],
+            [".", "GroupMinSize", ".", "."],
+            [".", "GroupMaxSize", ".", "."]
           ]
           period = 300
           stat   = "Average"
           region = var.aws_region
-          title  = "EC2 CPU Utilization"
-          yAxis = {
-            left = {
-              min = 0
-              max = 100
-            }
-          }
+          title  = "Auto Scaling Group Metrics"
         }
         width  = 12
         height = 6
@@ -55,84 +45,38 @@ resource "aws_cloudwatch_dashboard" "main" {
         type = "metric"
         properties = {
           metrics = [
-            for instance_id in var.instance_ids : [
-              "AWS/EC2",
-              "NetworkIn",
-              {
-                stat   = "Sum"
-                label  = "Instance ${instance_id}"
-                region = var.aws_region
-              },
-              { dimensions = { InstanceId = instance_id } }
-            ]
+            ["AWS/ApplicationELB", "TargetResponseTime", { stat = "Average" }],
+            [".", "RequestCount", { stat = "Sum" }]
           ]
           period = 300
-          stat   = "Sum"
           region = var.aws_region
-          title  = "Network In (Bytes)"
+          title  = "ALB Metrics"
         }
         width  = 12
         height = 6
         x      = 12
         y      = 0
-      },
+      }
+    ]
+    }) : jsonencode({
+    widgets = [
       {
-        type = "metric"
+        type = "text"
         properties = {
-          metrics = [
-            for instance_id in var.instance_ids : [
-              "AWS/EC2",
-              "NetworkOut",
-              {
-                stat   = "Sum"
-                label  = "Instance ${instance_id}"
-                region = var.aws_region
-              },
-              { dimensions = { InstanceId = instance_id } }
-            ]
-          ]
-          period = 300
-          stat   = "Sum"
-          region = var.aws_region
-          title  = "Network Out (Bytes)"
+          markdown = "## ${var.project_name}-${var.environment}\n\nMonitoring Dashboard\n\nNo instances currently being monitored."
         }
-        width  = 12
+        width  = 24
         height = 6
         x      = 0
-        y      = 6
-      },
-      {
-        type = "metric"
-        properties = {
-          metrics = [
-            for instance_id in var.instance_ids : [
-              "AWS/EC2",
-              "StatusCheckFailed",
-              {
-                stat   = "Maximum"
-                label  = "Instance ${instance_id}"
-                region = var.aws_region
-              },
-              { dimensions = { InstanceId = instance_id } }
-            ]
-          ]
-          period = 300
-          stat   = "Maximum"
-          region = var.aws_region
-          title  = "Status Check Failed"
-        }
-        width  = 12
-        height = 6
-        x      = 12
-        y      = 6
+        y      = 0
       }
     ]
   })
 }
 
-# CloudWatch Metric Alarm - High CPU
+# CloudWatch Metric Alarm - High CPU (for individual instances if provided)
 resource "aws_cloudwatch_metric_alarm" "high_cpu" {
-  count = var.create_alarms ? length(var.instance_ids) : 0
+  count = var.create_alarms && length(var.instance_ids) > 0 ? length(var.instance_ids) : 0
 
   alarm_name          = "${var.project_name}-${var.environment}-high-cpu-${count.index + 1}"
   comparison_operator = "GreaterThanThreshold"
@@ -157,29 +101,29 @@ resource "aws_cloudwatch_metric_alarm" "high_cpu" {
   )
 }
 
-# CloudWatch Metric Alarm - Status Check Failed
-resource "aws_cloudwatch_metric_alarm" "status_check" {
-  count = var.create_alarms ? length(var.instance_ids) : 0
+# CloudWatch Metric Alarm - ASG High CPU
+resource "aws_cloudwatch_metric_alarm" "asg_high_cpu" {
+  count = var.create_alarms && var.autoscaling_group_name != "" ? 1 : 0
 
-  alarm_name          = "${var.project_name}-${var.environment}-status-check-${count.index + 1}"
+  alarm_name          = "${var.project_name}-${var.environment}-asg-high-cpu"
   comparison_operator = "GreaterThanThreshold"
   evaluation_periods  = 2
-  metric_name         = "StatusCheckFailed"
+  metric_name         = "CPUUtilization"
   namespace           = "AWS/EC2"
   period              = 300
-  statistic           = "Maximum"
-  threshold           = 0
-  alarm_description   = "This metric monitors EC2 status checks"
+  statistic           = "Average"
+  threshold           = 80
+  alarm_description   = "This metric monitors ASG average CPU utilization"
   alarm_actions       = var.alarm_actions
 
   dimensions = {
-    InstanceId = var.instance_ids[count.index]
+    AutoScalingGroupName = var.autoscaling_group_name
   }
 
   tags = merge(
     var.common_tags,
     {
-      Name = "${var.project_name}-${var.environment}-status-check-alarm-${count.index + 1}"
+      Name = "${var.project_name}-${var.environment}-asg-high-cpu-alarm"
     }
   )
 }

@@ -21,8 +21,9 @@ resource "aws_vpc_security_group_ingress_rule" "ingress" {
   security_group_id = aws_security_group.main.id
   description       = var.ingress_rules[count.index].description
 
-  from_port   = var.ingress_rules[count.index].from_port
-  to_port     = var.ingress_rules[count.index].to_port
+  # For protocol "-1" (all protocols), ports must be -1
+  from_port   = var.ingress_rules[count.index].protocol == "-1" ? -1 : var.ingress_rules[count.index].from_port
+  to_port     = var.ingress_rules[count.index].protocol == "-1" ? -1 : var.ingress_rules[count.index].to_port
   ip_protocol = var.ingress_rules[count.index].protocol
   cidr_ipv4   = var.ingress_rules[count.index].cidr_blocks
 
@@ -38,8 +39,9 @@ resource "aws_vpc_security_group_egress_rule" "egress" {
   security_group_id = aws_security_group.main.id
   description       = var.egress_rules[count.index].description
 
-  from_port   = var.egress_rules[count.index].from_port
-  to_port     = var.egress_rules[count.index].to_port
+  # For protocol "-1" (all protocols), ports must be -1
+  from_port   = var.egress_rules[count.index].protocol == "-1" ? -1 : var.egress_rules[count.index].from_port
+  to_port     = var.egress_rules[count.index].protocol == "-1" ? -1 : var.egress_rules[count.index].to_port
   ip_protocol = var.egress_rules[count.index].protocol
   cidr_ipv4   = var.egress_rules[count.index].cidr_blocks
 

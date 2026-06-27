@@ -1,5 +1,5 @@
 # VPC Module - Variables
-# Defines input variables for VPC configuration
+# Defines input variables for VPC configuration with Public and Private subnets
 
 variable "project_name" {
   description = "Name of the project"
@@ -21,6 +21,18 @@ variable "public_subnet_count" {
   description = "Number of public subnets to create"
   type        = number
   default     = 2
+}
+
+variable "private_subnet_count" {
+  description = "Number of private subnets to create"
+  type        = number
+  default     = 2
+}
+
+variable "enable_nat_gateway" {
+  description = "Enable NAT Gateway for private subnet internet access"
+  type        = bool
+  default     = true
 }
 
 variable "enable_flow_logs" {

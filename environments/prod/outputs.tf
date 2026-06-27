@@ -1,4 +1,4 @@
-# Production Environment - Outputs
+# Development Environment - Outputs
 
 # VPC Outputs
 output "vpc_id" {
@@ -11,20 +11,57 @@ output "public_subnet_ids" {
   value       = module.vpc.public_subnet_ids
 }
 
-# EC2 Outputs
-output "instance_ids" {
-  description = "List of EC2 instance IDs"
-  value       = module.ec2.instance_ids
+output "private_subnet_ids" {
+  description = "List of private subnet IDs"
+  value       = module.vpc.private_subnet_ids
 }
 
-output "instance_public_ips" {
-  description = "List of EC2 public IP addresses"
-  value       = module.ec2.instance_public_ips
+output "nat_gateway_ip" {
+  description = "Elastic IP of NAT Gateway"
+  value       = module.vpc.nat_gateway_eip
 }
 
-output "instance_public_dns" {
-  description = "List of EC2 public DNS names"
-  value       = module.ec2.instance_public_dns
+# Bastion Host Outputs
+output "bastion_public_ip" {
+  description = "Public IP of Bastion Host"
+  value       = module.bastion.bastion_public_ip
+}
+
+output "bastion_instance_id" {
+  description = "Instance ID of Bastion Host"
+  value       = module.bastion.bastion_instance_id
+}
+
+# ALB Outputs
+output "alb_dns_name" {
+  description = "DNS name of the Application Load Balancer"
+  value       = module.alb.alb_dns_name
+}
+
+output "alb_arn" {
+  description = "ARN of the Application Load Balancer"
+  value       = module.alb.alb_arn
+}
+
+output "target_group_arn" {
+  description = "ARN of the Target Group"
+  value       = module.alb.target_group_arn
+}
+
+# Auto Scaling Group Outputs
+output "asg_name" {
+  description = "Name of the Auto Scaling Group"
+  value       = module.asg.autoscaling_group_name
+}
+
+output "asg_arn" {
+  description = "ARN of the Auto Scaling Group"
+  value       = module.asg.autoscaling_group_arn
+}
+
+output "launch_template_id" {
+  description = "ID of the Launch Template"
+  value       = module.asg.launch_template_id
 }
 
 # S3 Outputs
@@ -55,13 +92,14 @@ output "log_group_name" {
   value       = module.cloudwatch.log_group_name
 }
 
-output "dashboard_name" {
-  description = "Name of the CloudWatch dashboard"
-  value       = module.cloudwatch.dashboard_name
+# Application Access
+output "application_url" {
+  description = "URL to access the application via ALB"
+  value       = "http://${module.alb.alb_dns_name}"
 }
 
-# Security Group Outputs
-output "security_group_id" {
-  description = "ID of the security group"
-  value       = module.security_group.security_group_id
+# SSH Access Instructions
+output "ssh_to_bastion" {
+  description = "Command to SSH into Bastion Host"
+  value       = "ssh -i your-key.pem ec2-user@${module.bastion.bastion_public_ip}"
 }

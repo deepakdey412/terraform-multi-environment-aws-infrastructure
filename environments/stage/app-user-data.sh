@@ -1,6 +1,6 @@
 #!/bin/bash
-# User Data Script for EC2 Instance - Production Environment
-# This script runs on instance startup
+# Application Instance User Data Script - Dev Environment
+# Runs on application instances in Private Subnet (Auto Scaling Group)
 
 set -e
 
@@ -90,11 +90,11 @@ cat <<'WEBAPP' > /opt/app/index.html
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Multi-Env Infrastructure - Production</title>
+    <title>Multi-Env Infrastructure - Dev (Private Subnet)</title>
     <style>
         body {
             font-family: Arial, sans-serif;
-            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             display: flex;
             justify-content: center;
             align-items: center;
@@ -107,42 +107,77 @@ cat <<'WEBAPP' > /opt/app/index.html
             border-radius: 10px;
             box-shadow: 0 10px 40px rgba(0,0,0,0.3);
             text-align: center;
+            max-width: 600px;
         }
         h1 {
             color: #333;
             margin-bottom: 20px;
         }
         .badge {
-            background: #00c853;
+            background: #667eea;
             color: white;
             padding: 5px 15px;
             border-radius: 20px;
             font-size: 14px;
         }
+        .subnet-badge {
+            background: #28a745;
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 12px;
+            margin-left: 10px;
+        }
         .info {
             margin-top: 20px;
+            text-align: left;
+        }
+        .architecture {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 20px;
+            font-size: 12px;
             text-align: left;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>✨ Multi-Environment Infrastructure</h1>
-        <span class="badge">Production Environment</span>
+        <h1>🚀 Multi-Environment Infrastructure</h1>
+        <span class="badge">Development Environment</span>
+        <span class="subnet-badge">Private Subnet</span>
         <div class="info">
             <p><strong>Environment:</strong> ${environment}</p>
             <p><strong>S3 Bucket:</strong> ${s3_bucket_name}</p>
             <p><strong>Instance ID:</strong> <span id="instance-id">Loading...</span></p>
-            <p><strong>Region:</strong> <span id="region">Loading...</span></p>
+            <p><strong>Private IP:</strong> <span id="private-ip">Loading...</span></p>
+            <p><strong>Availability Zone:</strong> <span id="az">Loading...</span></p>
+        </div>
+        <div class="architecture">
+            <strong>Architecture:</strong><br>
+            Internet → ALB (Public Subnet) → This Instance (Private Subnet)<br>
+            Outbound: This Instance → NAT Gateway → Internet<br>
+            SSH Access: Bastion Host (Public) → This Instance (Private)
         </div>
     </div>
     <script>
-        fetch('http://169.254.169.254/latest/meta-data/instance-id')
+        const metadataBase = 'http://169.254.169.254/latest/meta-data/';
+        
+        fetch(metadataBase + 'instance-id')
             .then(r => r.text())
-            .then(id => document.getElementById('instance-id').textContent = id);
-        fetch('http://169.254.169.254/latest/meta-data/placement/region')
+            .then(id => document.getElementById('instance-id').textContent = id)
+            .catch(() => document.getElementById('instance-id').textContent = 'N/A');
+            
+        fetch(metadataBase + 'local-ipv4')
             .then(r => r.text())
-            .then(region => document.getElementById('region').textContent = region);
+            .then(ip => document.getElementById('private-ip').textContent = ip)
+            .catch(() => document.getElementById('private-ip').textContent = 'N/A');
+            
+        fetch(metadataBase + 'placement/availability-zone')
+            .then(r => r.text())
+            .then(az => document.getElementById('az').textContent = az)
+            .catch(() => document.getElementById('az').textContent = 'N/A');
     </script>
 </body>
 </html>
@@ -173,8 +208,8 @@ systemctl enable webapp
 systemctl start webapp
 
 # Create a test file in S3
-echo "Production instance initialized at $(date)" > /tmp/init-log.txt
-aws s3 cp /tmp/init-log.txt s3://${s3_bucket_name}/logs/$(hostname)-init.txt
+echo "App instance initialized at $(date) in Private Subnet" > /tmp/init-log.txt
+aws s3 cp /tmp/init-log.txt s3://${s3_bucket_name}/logs/$(hostname)-init.txt || true
 
 # Log completion
-echo "User data script completed successfully at $(date)" >> /var/log/user-data.log
+echo "Application instance initialization completed at $(date)" >> /var/log/user-data.log

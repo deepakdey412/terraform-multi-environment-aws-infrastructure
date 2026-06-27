@@ -36,20 +36,56 @@ variable "public_subnet_count" {
   default     = 2
 }
 
-variable "instance_count" {
-  description = "Number of EC2 instances"
+variable "private_subnet_count" {
+  description = "Number of private subnets"
   type        = number
-  default     = 1
+  default     = 2
 }
 
-variable "instance_type" {
-  description = "EC2 instance type"
+variable "enable_nat_gateway" {
+  description = "Enable NAT Gateway for private subnet internet access"
+  type        = bool
+  default     = true
+}
+
+variable "bastion_instance_type" {
+  description = "Instance type for Bastion Host"
   type        = string
   default     = "t2.micro"
 }
 
+variable "app_instance_type" {
+  description = "Instance type for Application instances"
+  type        = string
+  default     = "t2.micro"
+}
+
+variable "asg_min_size" {
+  description = "Minimum size of Auto Scaling Group"
+  type        = number
+  default     = 1
+}
+
+variable "asg_max_size" {
+  description = "Maximum size of Auto Scaling Group"
+  type        = number
+  default     = 2
+}
+
+variable "asg_desired_capacity" {
+  description = "Desired capacity of Auto Scaling Group"
+  type        = number
+  default     = 1
+}
+
 variable "allowed_ssh_cidr" {
-  description = "CIDR block allowed for SSH access"
+  description = "CIDR block allowed for SSH access to Bastion"
   type        = string
   default     = "0.0.0.0/0"
+}
+
+variable "key_name" {
+  description = "SSH key pair name for EC2 instances"
+  type        = string
+  default     = ""
 }

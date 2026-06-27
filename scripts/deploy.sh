@@ -53,7 +53,7 @@ cd "$ENV_DIR"
 
 # Step 1: Terraform Init
 print_message "$BLUE" "🔧 Step 1/5: Initializing Terraform..."
-if terraform init -backend-config=backend.hcl; then
+if terraform init -backend-config=backend.hcl -reconfigure; then
     print_message "$GREEN" "✅ Terraform initialization successful!"
 else
     print_message "$RED" "❌ Terraform initialization failed!"

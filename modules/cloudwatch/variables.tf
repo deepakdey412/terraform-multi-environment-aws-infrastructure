@@ -28,6 +28,12 @@ variable "instance_ids" {
   default     = []
 }
 
+variable "autoscaling_group_name" {
+  description = "Name of Auto Scaling Group to monitor"
+  type        = string
+  default     = ""
+}
+
 variable "create_alarms" {
   description = "Create CloudWatch alarms"
   type        = bool

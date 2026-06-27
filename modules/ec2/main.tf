@@ -1,14 +1,14 @@
 # EC2 Module - Main Configuration
-# Creates EC2 instances with user data, monitoring, and instance profiles
+# Creates Bastion Host in Public Subnet for SSH access to private instances
 
-# Get latest Amazon Linux 2023 AMI
-data "aws_ami" "amazon_linux" {
+# Use Ubuntu 22.04 LTS AMI
+data "aws_ami" "ubuntu" {
   most_recent = true
-  owners      = ["amazon"]
+  owners      = ["099720109477"] # Canonical
 
   filter {
     name   = "name"
-    values = ["al2023-ami-*-x86_64"]
+    values = ["ubuntu/images/hvm-ssd/ubuntu-jammy-22.04-amd64-server-*"]
   }
 
   filter {
@@ -20,17 +20,23 @@ data "aws_ami" "amazon_linux" {
     name   = "root-device-type"
     values = ["ebs"]
   }
+
+  filter {
+    name   = "architecture"
+    values = ["x86_64"]
+  }
 }
 
-# Create EC2 Instances
-resource "aws_instance" "main" {
-  count = var.instance_count
+# Create Bastion Host
+resource "aws_instance" "bastion" {
+  count = var.create_bastion ? 1 : 0
 
-  ami                    = data.aws_ami.amazon_linux.id
+  ami                    = data.aws_ami.ubuntu.id
   instance_type          = var.instance_type
-  subnet_id              = var.subnet_ids[count.index % length(var.subnet_ids)]
+  subnet_id              = var.subnet_ids[0] # First public subnet
   vpc_security_group_ids = var.security_group_ids
   iam_instance_profile   = var.iam_instance_profile
+  key_name               = var.key_name != "" ? var.key_name : null
 
   user_data = var.user_data_script
 
@@ -45,7 +51,7 @@ resource "aws_instance" "main" {
     tags = merge(
       var.common_tags,
       {
-        Name = "${var.project_name}-${var.environment}-instance-${count.index + 1}-root"
+        Name = "${var.project_name}-${var.environment}-bastion-root"
       }
     )
   }
@@ -60,23 +66,9 @@ resource "aws_instance" "main" {
   tags = merge(
     var.common_tags,
     {
-      Name  = "${var.project_name}-${var.environment}-instance-${count.index + 1}"
-      Index = count.index + 1
+      Name = "${var.project_name}-${var.environment}-bastion-host"
+      Role = "Bastion"
     }
   )
 }
 
-# Elastic IP (Optional - for Production)
-resource "aws_eip" "main" {
-  count = var.allocate_eip ? var.instance_count : 0
-
-  instance = aws_instance.main[count.index].id
-  domain   = "vpc"
-
-  tags = merge(
-    var.common_tags,
-    {
-      Name = "${var.project_name}-${var.environment}-eip-${count.index + 1}"
-    }
-  )
-}
